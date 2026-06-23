@@ -133,6 +133,13 @@ class DatabaseService {
     return task.copyWith(id: id);
   }
 
+  /// Mengambil semua tasks, diurutkan berdasarkan deadline terdekat.
+  Future<List<TaskModel>> getAllTasks() async {
+    final db = await database;
+    final maps = await db.query('tasks', orderBy: 'deadline ASC');
+    return maps.map(TaskModel.fromMap).toList();
+  }
+
   /// Mengambil satu task berdasarkan [id].
   /// Mengembalikan null jika tidak ditemukan.
   Future<TaskModel?> getTaskById(int id) async {
