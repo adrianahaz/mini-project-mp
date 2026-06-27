@@ -25,11 +25,20 @@ class DatabaseService {
     return _db!;
   }
 
+  Future<void> initialize() async {
+    await database;
+  }
+
   Future<Database> _openDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'student_task_manager.db');
 
-    return await openDatabase(path, version: 1, onCreate: _createTables);
+    return await openDatabase(
+      path,
+      version: 1,
+      onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
+      onCreate: _createTables,
+    );
   }
 
   // ---------------------------------
@@ -69,7 +78,7 @@ class DatabaseService {
   Future<CourseModel> insertCourse(CourseModel course) async {
     final db = await database;
     final id = await db.insert(
-      'course',
+      'courses',
       course.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
