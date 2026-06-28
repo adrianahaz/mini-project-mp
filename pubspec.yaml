@@ -36,6 +36,8 @@ dependencies:
 
   # Database SQLite
   sqflite:
+  sqflite_common_ffi: 
+  sqflite_common_ffi_web: 
   path:
 
   # Others

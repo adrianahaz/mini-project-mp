@@ -39,6 +39,10 @@ class DatabaseService {
     return _db!;
   }
 
+  Future<void> initialize() async {
+    await database;
+  }
+
   Future<Database> _openDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'student_task_manager.db');
@@ -50,6 +54,8 @@ class DatabaseService {
       onOpen: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
+      onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
+      onCreate: _createTables,
     );
   }
 
