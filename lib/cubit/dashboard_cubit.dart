@@ -25,8 +25,10 @@ class DashboardCubit extends Cubit<DashboardState> {
     emit(const DashboardLoading());
     try {
       final summary = await _db.getDashboardSummary();
+      if (isClosed) return;
       emit(DashboardLoaded(summary));
     } catch (e) {
+      if (isClosed) return;
       emit(DashboardError('Gagal memuat ringkasan dashboard: ${e.toString()}'));
     }
   }

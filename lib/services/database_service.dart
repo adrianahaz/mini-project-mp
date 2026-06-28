@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -19,9 +21,21 @@ class DatabaseService {
   // OPEN DATABASE
   // ---------------------------------
 
+  Completer<Database>? _dbCompleter;
+
   Future<Database> get database async {
     if (_db != null) return _db!;
-    _db = await _openDatabase();
+    if (_dbCompleter != null) return _dbCompleter!.future;
+
+    _dbCompleter = Completer<Database>();
+    try {
+      _db = await _openDatabase();
+      _dbCompleter!.complete(_db!);
+    } catch (e) {
+      _dbCompleter!.completeError(e);
+      _dbCompleter = null;
+      rethrow;
+    }
     return _db!;
   }
 
@@ -36,6 +50,10 @@ class DatabaseService {
     return await openDatabase(
       path,
       version: 1,
+      onCreate: _createTables,
+      onOpen: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onConfigure: (db) async => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: _createTables,
     );
@@ -166,6 +184,7 @@ class DatabaseService {
   /// Memperbarui data task yang sudah ada.
   /// Mengembalikan jumlah baris yang berhasil diubah.
   Future<int> updateTask(TaskModel task) async {
+    assert(task.id != null, 'Task id tidak boleh null saat update');
     final db = await database;
     return await db.update(
       'tasks',
@@ -225,16 +244,18 @@ class DatabaseService {
   Future<DashboardSummary> getDashboardSummary() async {
     final db = await database;
 
-    final totalResult = await db.rawQuery(
-      'SELECT COUNT(*) AS count FROM tasks',
-    );
-    final completedResult = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM tasks WHERE status = ?',
+    final result = await db.rawQuery(
+      '''
+      SELECT
+        COUNT(*) AS total,
+        SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS completed
+      FROM tasks
+      ''',
       [TaskStatus.selesai.label],
     );
 
-    final total = Sqflite.firstIntValue(totalResult) ?? 0;
-    final completed = Sqflite.firstIntValue(completedResult) ?? 0;
+    final total = (result.first['total'] as int?) ?? 0;
+    final completed = (result.first['completed'] as int?) ?? 0;
     final pending = total - completed;
 
     return DashboardSummary(
