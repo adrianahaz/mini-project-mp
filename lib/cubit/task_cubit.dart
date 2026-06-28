@@ -41,8 +41,10 @@ class TaskCubit extends Cubit<TaskState> {
     emit(const TaskLoading());
     try {
       final tasks = await _db.getAllTasks();
+      if (isClosed) return;
       emit(TaskLoaded(tasks: tasks));
     } catch (e) {
+      if (isClosed) return;
       emit(TaskError('Gagal memuat data tasks: ${e.toString()}'));
     }
   }
@@ -59,8 +61,10 @@ class TaskCubit extends Cubit<TaskState> {
     emit(const TaskLoading());
     try {
       final tasks = await _db.getTasksByCourse(courseId);
+      if (isClosed) return;
       emit(TaskLoaded(tasks: tasks, activeCourseId: courseId));
     } catch (e) {
+      if (isClosed) return;
       emit(TaskError('Gagal memuat tasks untuk course ini: ${e.toString()}'));
     }
   }
@@ -83,6 +87,7 @@ class TaskCubit extends Cubit<TaskState> {
       await _db.insertTask(task);
       await _refresh();
     } catch (e) {
+      if (isClosed) return;
       emit(TaskError('Gagal menambahkan task: ${e.toString()}'));
     }
   }
@@ -111,6 +116,7 @@ class TaskCubit extends Cubit<TaskState> {
       await _db.updateTask(task);
       await _refresh();
     } catch (e) {
+      if (isClosed) return;
       emit(TaskError('Gagal memperbarui task: ${e.toString()}'));
     }
   }
@@ -127,6 +133,7 @@ class TaskCubit extends Cubit<TaskState> {
       await _db.deleteTask(id);
       await _refresh();
     } catch (e) {
+      if (isClosed) return;
       emit(TaskError('Gagal menghapus task: ${e.toString()}'));
     }
   }
@@ -151,6 +158,7 @@ class TaskCubit extends Cubit<TaskState> {
       await _db.updateTask(updated);
       await _refresh();
     } catch (e) {
+      if (isClosed) return;
       emit(TaskError('Gagal memperbarui status task: ${e.toString()}'));
     }
   }

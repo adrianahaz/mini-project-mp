@@ -22,8 +22,10 @@ class CourseCubit extends Cubit<CourseState> {
     emit(const CourseLoading());
     try {
       final courses = await _db.getAllCourses();
+      if (isClosed) return;
       emit(CourseLoaded(courses));
     } catch (e) {
+      if (isClosed) return;
       emit(CourseError('Gagal memuat data courses: ${e.toString()}'));
     }
   }
@@ -38,7 +40,7 @@ class CourseCubit extends Cubit<CourseState> {
   Future<void> addCourse(String name) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) {
-      emit(const CourseError('Nama coure tidak boleh kosong.'));
+      emit(const CourseError('Nama course tidak boleh kosong.'));
       return;
     }
 
@@ -48,6 +50,7 @@ class CourseCubit extends Cubit<CourseState> {
       await _db.insertCourse(course);
       await loadCourses();
     } catch (e) {
+      if (isClosed) return;
       emit(CourseError('Gagal menambahkan course: ${e.toString()}'));
     }
   }
@@ -76,6 +79,7 @@ class CourseCubit extends Cubit<CourseState> {
       await _db.updateCourse(course.copyWith(name: trimmedName));
       await loadCourses();
     } catch (e) {
+      if (isClosed) return;
       emit(CourseError('Gagal memperbarui course: ${e.toString()}'));
     }
   }
@@ -93,6 +97,7 @@ class CourseCubit extends Cubit<CourseState> {
       await _db.deleteCourse(id);
       await loadCourses();
     } catch (e) {
+      if (isClosed) return;
       emit(CourseError('Gagal menghapus course: ${e.toString()}'));
     }
   }
